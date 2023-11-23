@@ -1,12 +1,13 @@
 import io
 import streamlit as st
-from dotenv import load_dotenv
 from PyPDF2 import PdfReader
+from dotenv import load_dotenv
+from langchain.vectorstores import FAISS
 from langchain.llms.openai import OpenAI
-from langchain.chains.summarize import load_summarize_chain
+from langchain.embeddings import OpenAIEmbeddings
 from langchain.chains import AnalyzeDocumentChain
-
-
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.chains.summarize import load_summarize_chain
 
 def main():
     load_dotenv()
@@ -47,7 +48,22 @@ def main():
                     summarize_document_chain = AnalyzeDocumentChain(combine_docs_chain = summary_chain)
                     summarized_data = summarize_document_chain.run(text)
                     print(summarized_data)
-                st.write(summarized_data)
+
+                    # create chunks from the text
+                    text_splitter = CharacterTextSplitter(
+                        separator = "\n",
+                        chunk_size = 1000,
+                        chunk_overlap = 200,
+                        length_function = len
+                    )
+                    chunks = text_splitter.split_text(text)
+                    print(chunks)
+
+                    # creating vectors from text
+                    embeddings = OpenAIEmbeddings()
+                    vectorstore = FAISS.from_texts(texts=chunks,embedding=embeddings)
+                    print(vectorstore)
+                    st.write(vectorstore)
 
 
 if __name__ == "__main__":
