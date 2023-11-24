@@ -8,6 +8,7 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.chains import AnalyzeDocumentChain
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.chains.summarize import load_summarize_chain
+from langchain.chains.question_answering import load_qa_chain
 
 def main():
     load_dotenv()
@@ -62,8 +63,17 @@ def main():
                     # creating vectors from text
                     embeddings = OpenAIEmbeddings()
                     vectorstore = FAISS.from_texts(texts=chunks,embedding=embeddings)
-                    print(vectorstore)
-                    st.write(vectorstore)
+
+                    query = st.text_input("Ask your question here!!💬")
+                    docs = vectorstore.similarity_search(query=query, k=2)
+                    chain = load_qa_chain(
+                        llm = model,
+                        chain_type="stuff"
+                    )
+                    response = chain.run(question=query,input_documents=docs)
+
+                    print(response)
+                    st.write(response)
 
 
 if __name__ == "__main__":
